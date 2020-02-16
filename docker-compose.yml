@@ -2,6 +2,8 @@ version: '3.2'
 
 services:
   elasticsearch:
+    container_name: elasticsearch
+    restart: unless-stopped
     build:
       context: elasticsearch/
       args:
@@ -17,16 +19,14 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
-    environment:
-      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
-      ELASTIC_PASSWORD: changeme
-      # Use single node discovery in order to disable production mode and avoid bootstrap checks
-      # see https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
-      discovery.type: single-node
+    env_file:
+      - ./elasticsearch/elasticsearch.env
     networks:
       - elk
 
   logstash:
+    container_name: logstash
+    restart: unless-stopped
     build:
       context: logstash/
       args:
@@ -44,14 +44,16 @@ services:
       - "5000:5000/tcp"
       - "5000:5000/udp"
       - "9600:9600"
-    environment:
-      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    env_file:
+      - ./logstash/logstash.env
     networks:
       - elk
     depends_on:
       - elasticsearch
 
   kibana:
+    container_name: kibana
+    restart: unless-stopped
     build:
       context: kibana/
       args:
@@ -63,6 +65,8 @@ services:
         read_only: true
     ports:
       - "5601:5601"
+    env_file:
+        - ./kibana/kibana.env
     networks:
       - elk
     depends_on:
